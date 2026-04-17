@@ -1,28 +1,115 @@
+```md
 # Phase 5: Analysis
-Q5.1: Implementing pes checkout <branch>
-To implement branch switching, the following logic must be executed:
 
-Reference Update: The .pes/HEAD file must be updated to point to the new branch reference (e.g., changing from ref: refs/heads/main to ref: refs/heads/feature).
+## Q5.1: Implementing `pes checkout <branch>`
 
-Working Directory Sync: The current files in the working directory must be removed and replaced with the specific versions of files tracked in the tree object of the target branch's latest commit.
+### Core Logic
 
-Complexity: The operation is complex because it must handle "dirty" files—uncommitted changes that only exist in the working directory. Overwriting these without a warning would lead to permanent data loss.
+**1. Reference Update**
+- Update the `.pes/HEAD` file to point to the new branch reference  
+- Example:
+```
 
-Q5.2: Detecting "Dirty Working Directory" Conflicts
-A "dirty" state can be detected using metadata comparisons without re-hashing all files:
+ref: refs/heads/main → ref: refs/heads/feature
 
-Working Dir vs. Index: Compare the current metadata (mtime and size) of files in the working directory against the values stored in the Index. Differences indicate unstaged changes.
+```
 
-Index vs. HEAD: Compare the hash stored in the Index for a file against the hash in the Object Store associated with the current HEAD commit. Differences indicate staged but uncommitted changes.
+**2. Working Directory Sync**
+- Remove current files in the working directory  
+- Replace them with files from the target branch's latest commit (tree object)
 
-Conflict Detection: If either of these stages shows a difference, the directory is "dirty". If these dirty files also differ in the target branch, a conflict is flagged.
+---
 
-Q5.3: Detached HEAD States
-Definition: A "Detached HEAD" occurs when .pes/HEAD contains a raw commit hash directly instead of a branch reference like refs/heads/main.
+### Complexity
 
-Committing: Commits made in this state work normally but no branch pointer moves forward to track them. The new commits exist in the object store but are not "anchored" to a branch name.
+This operation is non-trivial due to handling dirty files:
 
-Recovery: If a user switches away, these commits become "orphaned". To recover them, the user must find the specific commit hash (from terminal history or a reflog) and manually create a new branch pointing to that hash.
+- Dirty files = uncommitted changes in the working directory  
+- Overwriting them without checks leads to permanent data loss  
 
+Therefore, safety checks are essential before switching branches  
 
+---
+
+## Q5.2: Detecting "Dirty Working Directory" Conflicts
+
+A dirty state can be detected efficiently using metadata without re-hashing all files.
+
+### 1. Working Directory vs Index
+
+- Compare:
+- mtime (modification time)
+- file size  
+- Stored in: Index  
+
+If different → Unstaged changes exist  
+
+---
+
+### 2. Index vs HEAD
+
+- Compare:
+- File hash in Index  
+- File hash in HEAD commit (Object Store)  
+
+If different → Staged but uncommitted changes exist  
+
+---
+
+### 3. Conflict Detection
+
+The directory is considered dirty if:
+- Either comparison shows differences  
+
+Conflict condition:
+- Dirty files also differ in the target branch  
+
+Result:
+- Checkout should be blocked or warned  
+
+---
+
+## Q5.3: Detached HEAD State
+
+### Definition
+
+A Detached HEAD occurs when:
+```
+
+.pes/HEAD contains a raw commit hash
+
+```
+
+Instead of:
+```
+
+ref: refs/heads/<branch>
+
+```
+
+---
+
+### Committing in Detached HEAD
+
+- Commits work normally  
+- However:
+  - No branch pointer moves forward  
+  - Commits are not linked to any branch  
+
+---
+
+### Recovery
+
+If the user switches away:
+- These commits become orphaned  
+
+To recover:
+1. Find the commit hash (via terminal history or reflog)  
+2. Create a new branch pointing to it:
+```
+
+pes branch <new-branch> <commit-hash>
+
+```
+```
 
