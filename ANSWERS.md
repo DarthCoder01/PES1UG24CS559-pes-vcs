@@ -17,3 +17,12 @@ Index vs. HEAD: Compare the hash stored in the Index for a file against the hash
 
 Conflict Detection: If either of these stages shows a difference, the directory is "dirty". If these dirty files also differ in the target branch, a conflict is flagged.
 
+Q5.3: Detached HEAD States
+Definition: A "Detached HEAD" occurs when .pes/HEAD contains a raw commit hash directly instead of a branch reference like refs/heads/main.
+
+Committing: Commits made in this state work normally but no branch pointer moves forward to track them. The new commits exist in the object store but are not "anchored" to a branch name.
+
+Recovery: If a user switches away, these commits become "orphaned". To recover them, the user must find the specific commit hash (from terminal history or a reflog) and manually create a new branch pointing to that hash.
+
+
+
